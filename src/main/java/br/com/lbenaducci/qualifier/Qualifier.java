@@ -3,6 +3,7 @@ package br.com.lbenaducci.qualifier;
 import java.lang.reflect.InvocationTargetException;
 import java.util.function.Predicate;
 
+@FunctionalInterface
 public interface Qualifier<T> {
 	boolean isSatisfiedBy(T t);
 
