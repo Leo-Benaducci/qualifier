@@ -9,13 +9,13 @@ class NotNullQualifierTest {
 
 	@Test
 	void shouldReturnFalseWhenCallIsSatisfiedByWithValueNull() {
-		NotNullQualifier<?> notNullQualifier = new NotNullQualifier<>();
+		NotNullQualifier notNullQualifier = new NotNullQualifier();
 		assertFalse(notNullQualifier.isSatisfiedBy(null));
 	}
 
 	@Test
 	void shouldReturnTrueWhenCallIsSatisfiedByWithValueNotNull() {
-		NotNullQualifier<Object> notNullQualifier = new NotNullQualifier<>();
+		NotNullQualifier notNullQualifier = new NotNullQualifier();
 		assertTrue(notNullQualifier.isSatisfiedBy("not null"));
 		assertTrue(notNullQualifier.isSatisfiedBy(1));
 		assertTrue(notNullQualifier.isSatisfiedBy(1.0));
