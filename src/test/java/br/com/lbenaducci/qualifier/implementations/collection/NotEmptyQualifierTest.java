@@ -11,19 +11,19 @@ class NotEmptyQualifierTest {
 
 	@Test
 	void shouldReturnFalseWhenCallIsSatisfiedByWithValueNull() {
-		NotEmptyQualifier notEmptyQualifier = new NotEmptyQualifier();
+		NotEmptyIteratorQualifier notEmptyQualifier = new NotEmptyIteratorQualifier();
 		assertFalse(notEmptyQualifier.isSatisfiedBy(null));
 	}
 
 	@Test
 	void shouldReturnFalseWhenCallIsSatisfiedByWithValueEmpty() {
-		NotEmptyQualifier notEmptyQualifier = new NotEmptyQualifier();
+		NotEmptyIteratorQualifier notEmptyQualifier = new NotEmptyIteratorQualifier();
 		assertFalse(notEmptyQualifier.isSatisfiedBy(List.of()));
 	}
 
 	@Test
 	void shouldReturnTrueWhenCallIsSatisfiedByWithValueNotEmpty() {
-		NotEmptyQualifier notEmptyQualifier = new NotEmptyQualifier();
+		NotEmptyIteratorQualifier notEmptyQualifier = new NotEmptyIteratorQualifier();
 		assertTrue(notEmptyQualifier.isSatisfiedBy(List.of("not empty")));
 	}
 }
