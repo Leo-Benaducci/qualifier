@@ -15,20 +15,20 @@ class RegexQualifierTest {
 	@Test
 	void shouldReturnFalseWhenValueNotMatches() {
 		RegexQualifier qualifier = new RegexQualifier();
-		qualifier.setRegex("a");
+		qualifier.setProperty("a");
 		assertFalse(qualifier.isSatisfiedBy("b"));
 
-		qualifier.setRegex("\\d");
+		qualifier.setProperty("\\d");
 		assertFalse(qualifier.isSatisfiedBy("a"));
 	}
 
 	@Test
 	void shouldReturnTrueWhenValueMatches() {
 		RegexQualifier qualifier = new RegexQualifier();
-		qualifier.setRegex("a");
+		qualifier.setProperty("a");
 		assertTrue(qualifier.isSatisfiedBy("a"));
 
-		qualifier.setRegex("\\d");
+		qualifier.setProperty("\\d");
 		assertTrue(qualifier.isSatisfiedBy("1"));
 	}
 

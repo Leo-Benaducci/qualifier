@@ -1,8 +1,8 @@
 package br.com.lbenaducci.qualifier.implementations.number;
 
-import br.com.lbenaducci.qualifier.Qualifier;
+import br.com.lbenaducci.qualifier.ComparatorQualifier;
 
-public class MaxQualifier implements Qualifier<Number> {
+public class MaxQualifier implements ComparatorQualifier<Number, Number> {
 	private Number max = Double.MAX_VALUE;
 
 	@Override
@@ -10,7 +10,8 @@ public class MaxQualifier implements Qualifier<Number> {
 		return number != null && number.doubleValue() <= max.doubleValue();
 	}
 
-	public void setMax(Number max) {
+	@Override
+	public void setProperty(Number max) {
 		this.max = max;
 	}
 }

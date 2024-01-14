@@ -1,8 +1,8 @@
 package br.com.lbenaducci.qualifier.implementations.string;
 
-import br.com.lbenaducci.qualifier.Qualifier;
+import br.com.lbenaducci.qualifier.ComparatorQualifier;
 
-public class MaxLengthQualifier implements Qualifier<String> {
+public class MaxLengthQualifier implements ComparatorQualifier<String, Number> {
 	private Number max = Long.MAX_VALUE;
 
 	@Override
@@ -10,7 +10,8 @@ public class MaxLengthQualifier implements Qualifier<String> {
 		return s != null && s.length() <= max.longValue();
 	}
 
-	public void setMax(Number max) {
+	@Override
+	public void setProperty(Number max) {
 		this.max = max;
 	}
 }

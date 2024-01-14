@@ -1,8 +1,8 @@
 package br.com.lbenaducci.qualifier.implementations.string;
 
-import br.com.lbenaducci.qualifier.Qualifier;
+import br.com.lbenaducci.qualifier.ComparatorQualifier;
 
-public class RegexQualifier implements Qualifier<String> {
+public class RegexQualifier implements ComparatorQualifier<String, String> {
 	private String regex = ".*";
 
 	@Override
@@ -10,7 +10,8 @@ public class RegexQualifier implements Qualifier<String> {
 		return s != null && s.matches(regex);
 	}
 
-	public void setRegex(String regex) {
+	@Override
+	public void setProperty(String regex) {
 		this.regex = regex;
 	}
 }

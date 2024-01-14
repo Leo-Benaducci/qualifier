@@ -1,8 +1,8 @@
 package br.com.lbenaducci.qualifier.implementations.number;
 
-import br.com.lbenaducci.qualifier.Qualifier;
+import br.com.lbenaducci.qualifier.ComparatorQualifier;
 
-public class MinQualifier implements Qualifier<Number> {
+public class MinQualifier implements ComparatorQualifier<Number, Number> {
 	private Number min = Double.MIN_VALUE;
 
 	@Override
@@ -10,7 +10,8 @@ public class MinQualifier implements Qualifier<Number> {
 		return number != null && number.doubleValue() >= min.doubleValue();
 	}
 
-	public void setMin(Number min) {
+	@Override
+	public void setProperty(Number min) {
 		this.min = min;
 	}
 }

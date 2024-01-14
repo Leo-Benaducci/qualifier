@@ -1,8 +1,8 @@
 package br.com.lbenaducci.qualifier.implementations.string;
 
-import br.com.lbenaducci.qualifier.Qualifier;
+import br.com.lbenaducci.qualifier.ComparatorQualifier;
 
-public class MinLengthQualifier implements Qualifier<String> {
+public class MinLengthQualifier implements ComparatorQualifier<String, Number> {
 	private Number min = 0;
 
 	@Override
@@ -10,7 +10,8 @@ public class MinLengthQualifier implements Qualifier<String> {
 		return s != null && s.length() >= min.longValue();
 	}
 
-	public void setMin(Number min) {
+	@Override
+	public void setProperty(Number min) {
 		this.min = min;
 	}
 }
