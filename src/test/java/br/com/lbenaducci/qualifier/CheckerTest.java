@@ -26,6 +26,12 @@ class CheckerTest {
 		Checker<String> checker = Checker.of("value");
 		boolean result = assertDoesNotThrow(checker::check);
 		assertTrue(result);
+
+		Checker<Object> checker2 = Checker.of(null).qualifier(it -> {
+			throw new IllegalArgumentException("Error");
+		});
+		result = assertDoesNotThrow(checker2::check);
+		assertFalse(result);
 	}
 
 	@Test
@@ -156,6 +162,12 @@ class CheckerTest {
 		assertTrue(result);
 		result = checker2.min(2).check();
 		assertFalse(result);
+
+		Checker<Object> checker3 = Checker.of(null);
+		result = checker3.check();
+		assertTrue(result);
+		result = checker3.min(0).check();
+		assertTrue(result);
 	}
 
 	@Test
@@ -181,6 +193,12 @@ class CheckerTest {
 		assertTrue(result);
 		result = checker2.max(0).check();
 		assertFalse(result);
+
+		Checker<Object> checker3 = Checker.of(null);
+		result = checker3.check();
+		assertTrue(result);
+		result = checker3.max(0).check();
+		assertTrue(result);
 	}
 
 	@Test
@@ -198,6 +216,12 @@ class CheckerTest {
 		assertTrue(result);
 		result = checker.match("1").check();
 		assertFalse(result);
+
+		Checker<Object> checker2 = Checker.of(null);
+		result = checker2.check();
+		assertTrue(result);
+		result = checker2.match("0").check();
+		assertTrue(result);
 	}
 
 	@Test
