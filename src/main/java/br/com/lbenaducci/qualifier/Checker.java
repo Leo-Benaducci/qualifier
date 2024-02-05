@@ -1,42 +1,83 @@
 package br.com.lbenaducci.qualifier;
 
 import br.com.lbenaducci.qualifier.implementations.NotNullQualifier;
-import br.com.lbenaducci.qualifier.implementations.collection.NotEmptyIteratorQualifier;
+import br.com.lbenaducci.qualifier.implementations.collection.MaxSizeQualifier;
+import br.com.lbenaducci.qualifier.implementations.collection.MinSizeQualifier;
+import br.com.lbenaducci.qualifier.implementations.collection.NotEmptyCollectionQualifier;
 import br.com.lbenaducci.qualifier.implementations.number.MaxQualifier;
 import br.com.lbenaducci.qualifier.implementations.number.MinQualifier;
 import br.com.lbenaducci.qualifier.implementations.string.*;
-import lombok.extern.log4j.Log4j2;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.function.Consumer;
 
-@Log4j2
 public final class Checker<T> {
+	private static final Logger log = LogManager.getLogger(Checker.class);
+	private final List<Checker<?>> checkerList;
 	private final T value;
 	private Qualifier<T> qualifier;
-	private Action<T> success;
-	private Action<T> fail;
+	private Consumer<T> success;
+	private Consumer<T> fail;
+	private String errorMessage;
 
-	private Checker(T value) {
+	private Checker(List<Checker<?>> checkerList, T value) {
+		this.checkerList = checkerList;
 		this.value = value;
 		this.qualifier = it -> true;
+		checkerList.add(this);
 	}
 
 	public static <T> Checker<T> of(T value) {
-		return new Checker<>(value);
+		return new Checker<>(new ArrayList<>(), value);
 	}
 
-	public boolean check() {
-		boolean result = false;
-		try {
-			result = qualifier.isSatisfiedBy(value);
-		} catch(Exception e) {
-			log.warn("Error on check", e);
+	public static <I extends Iterable<T>, T> Checker<I> ofForEach(I values, Consumer<Checker<T>> checker) {
+		if(checker == null) {
+			throw new IllegalArgumentException("Checker cannot be null");
 		}
-		Action<T> action = result ? success : fail;
-		if(action != null) {
-			action.execute(value);
+		Checker<I> checkerInstance = new Checker<>(new ArrayList<>(), values);
+		if(values != null) {
+			values.forEach(it -> checker.accept(checkerInstance.and(it)));
 		}
-		return result;
+		return checkerInstance;
+	}
+
+	public <N> Checker<N> and(N value) {
+		return new Checker<>(checkerList, value);
+	}
+
+	public <I extends Iterable<N>, N> Checker<I> andForEach(I values, Consumer<Checker<N>> checker) {
+		if(checker == null) {
+			throw new IllegalArgumentException("Checker cannot be null");
+		}
+		Checker<I> checkerInstance = new Checker<>(checkerList, values);
+		values.forEach(it -> checker.accept(checkerInstance.and(it)));
+		return checkerInstance;
+	}
+
+	public Checker<T> success(Consumer<T> success) {
+		if(success == null) {
+			throw new IllegalArgumentException("Success cannot be null");
+		}
+		this.success = success;
+		return this;
+	}
+
+	public Checker<T> fail(Consumer<T> fail) {
+		if(fail == null) {
+			throw new IllegalArgumentException("Fail cannot be null");
+		}
+		this.fail = fail;
+		return this;
+	}
+
+	public Checker<T> error(String errorMessage) {
+		this.errorMessage = errorMessage;
+		return this;
 	}
 
 	public Checker<T> qualifier(Qualifier<T> qualifier) {
@@ -54,6 +95,23 @@ public final class Checker<T> {
 		return qualifier(Qualifier.of(qualifier));
 	}
 
+	public boolean check() {
+		List<String> errors = new ArrayList<>();
+		boolean result = true;
+		for(Checker<?> checker: checkerList) {
+			if(!checker.isSatisfied()) {
+				result = false;
+				if(checker.errorMessage != null) {
+					errors.add(checker.errorMessage);
+				}
+			}
+		}
+		if(!errors.isEmpty()) {
+			throw new IllegalArgumentException(String.join("; ", errors));
+		}
+		return result;
+	}
+
 	public Checker<T> notNull() {
 		return qualifier(it -> new NotNullQualifier().isSatisfiedBy(it));
 	}
@@ -62,8 +120,8 @@ public final class Checker<T> {
 		if(value instanceof String) {
 			return qualifier(it -> new NotEmptyQualifier().isSatisfiedBy((String) it));
 		}
-		if(value instanceof Iterable<?>) {
-			return qualifier(it -> new NotEmptyIteratorQualifier().isSatisfiedBy((Iterable<?>) it));
+		if(value instanceof Collection) {
+			return qualifier(it -> new NotEmptyCollectionQualifier().isSatisfiedBy((Collection<?>) it));
 		}
 		return notNull();
 	}
@@ -72,41 +130,65 @@ public final class Checker<T> {
 		if(value instanceof String) {
 			return qualifier(it -> new NotBlankQualifier().isSatisfiedBy((String) it));
 		}
-		return notEmpty();
+		return notNull();
 	}
 
 	public Checker<T> min(Number min) {
 		if(min == null) {
 			throw new IllegalArgumentException("Min cannot be null");
 		}
-		if(value instanceof Number) {
-			MinQualifier minQualifier = new MinQualifier();
-			minQualifier.setProperty(min);
-			return qualifier(it -> minQualifier.isSatisfiedBy((Number) it));
-		} else if(value instanceof String) {
-			MinLengthQualifier minLengthQualifier = new MinLengthQualifier();
-			minLengthQualifier.setProperty(min);
-			return qualifier(it -> minLengthQualifier.isSatisfiedBy((String) it));
-		} else {
-			return this;
+
+		if(value instanceof String) {
+			return qualifier(it -> {
+				MinLengthQualifier minLengthQualifier = new MinLengthQualifier();
+				minLengthQualifier.setProperty(min);
+				return minLengthQualifier.isSatisfiedBy((String) it);
+			});
 		}
+		if(value instanceof Collection) {
+			return qualifier(it -> {
+				MinSizeQualifier minSizeQualifier = new MinSizeQualifier();
+				minSizeQualifier.setProperty(min);
+				return minSizeQualifier.isSatisfiedBy((Collection<?>) it);
+			});
+		}
+		if(value instanceof Number) {
+			return qualifier(it -> {
+				MinQualifier minQualifier = new MinQualifier();
+				minQualifier.setProperty(min);
+				return minQualifier.isSatisfiedBy((Number) it);
+			});
+		}
+		return this;
 	}
 
 	public Checker<T> max(Number max) {
 		if(max == null) {
 			throw new IllegalArgumentException("Max cannot be null");
 		}
-		if(value instanceof Number) {
-			MaxQualifier maxQualifier = new MaxQualifier();
-			maxQualifier.setProperty(max);
-			return qualifier(it -> maxQualifier.isSatisfiedBy((Number) it));
-		} else if(value instanceof String) {
-			MaxLengthQualifier maxLengthQualifier = new MaxLengthQualifier();
-			maxLengthQualifier.setProperty(max);
-			return qualifier(it -> maxLengthQualifier.isSatisfiedBy((String) it));
-		} else {
-			return this;
+
+		if(value instanceof String) {
+			return qualifier(it -> {
+				MaxLengthQualifier maxLengthQualifier = new MaxLengthQualifier();
+				maxLengthQualifier.setProperty(max);
+				return maxLengthQualifier.isSatisfiedBy((String) it);
+			});
 		}
+		if(value instanceof Collection) {
+			return qualifier(it -> {
+				MaxSizeQualifier maxSizeQualifier = new MaxSizeQualifier();
+				maxSizeQualifier.setProperty(max);
+				return maxSizeQualifier.isSatisfiedBy((Collection<?>) it);
+			});
+		}
+		if(value instanceof Number) {
+			return qualifier(it -> {
+				MaxQualifier maxQualifier = new MaxQualifier();
+				maxQualifier.setProperty(max);
+				return maxQualifier.isSatisfiedBy((Number) it);
+			});
+		}
+		return this;
 	}
 
 	public Checker<T> match(String regex) {
@@ -114,26 +196,26 @@ public final class Checker<T> {
 			throw new IllegalArgumentException("Regex cannot be null");
 		}
 		if(value instanceof String) {
-			RegexQualifier regexQualifier = new RegexQualifier();
-			regexQualifier.setProperty(regex);
-			return qualifier(it -> regexQualifier.isSatisfiedBy((String) it));
+			return qualifier(it -> {
+				RegexQualifier regexQualifier = new RegexQualifier();
+				regexQualifier.setProperty(regex);
+				return regexQualifier.isSatisfiedBy((String) it);
+			});
 		}
 		return this;
 	}
 
-	public Checker<T> success(Consumer<T> success) {
-		if(success == null) {
-			throw new IllegalArgumentException("Then cannot be null");
+	private boolean isSatisfied() {
+		boolean result = false;
+		try {
+			result = qualifier.isSatisfiedBy(value);
+		} catch(Exception e) {
+			log.warn("Error on check", e);
 		}
-		this.success = new Action<>(success);
-		return this;
-	}
-
-	public Checker<T> fail(Consumer<T> fail) {
-		if(fail == null) {
-			throw new IllegalArgumentException("onError cannot be null");
+		Consumer<T> action = result ? success : fail;
+		if(action != null) {
+			action.accept(value);
 		}
-		this.fail = new Action<>(fail);
-		return this;
+		return result;
 	}
 }
