@@ -1,5 +1,6 @@
-package br.com.lbenaducci.qualifier;
+package br.com.lbenaducci.qualifier.checker;
 
+import br.com.lbenaducci.qualifier.Qualifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.MethodOrderer;
@@ -21,19 +22,33 @@ class CheckerTest {
 
 	@Test
 	void whenOf_thenReturnCheckerInstance() {
-		Checker<String, Integer> checker = Checker.of(Integer::parseInt);
+		Checker<String, Integer> checker = Checker.of(String.class, Integer.class, Integer::parseInt);
 
 		assertNotNull(checker);
 	}
 
 	@Test
 	void whenOfNull_thenThrowIllegalArgumentException() {
-		assertThrows(IllegalArgumentException.class, () -> Checker.of(null));
+		assertThrows(IllegalArgumentException.class, () -> Checker.of(Object.class, Object.class, null));
+	}
+
+	@Test
+	void whenAnd_thenReturnNewCheckerInstance() {
+		Checker<String, Integer> checker = Checker.of(String.class, Integer.class, Integer::parseInt);
+		Checker<String, Integer> result = checker.and(Integer.class, String::length);
+		assertNotNull(result);
+		assertNotEquals(checker, result);
+	}
+
+	@Test
+	void whenAndNullAttribute_thenThrowIllegalArgumentException() {
+		Checker<String, Integer> checker = Checker.of(String.class, Integer.class, Integer::parseInt);
+		assertThrows(IllegalArgumentException.class, () -> checker.and(Integer.class, null));
 	}
 
 	@Test
 	void whenSuccess_thenReturnCheckerInstance() {
-		Checker<String, Integer> checker = Checker.of(Integer::parseInt);
+		Checker<String, Integer> checker = Checker.of(String.class, Integer.class, Integer::parseInt);
 		Checker<String, Integer> result = checker.success(value -> {});
 		assertNotNull(result);
 		assertEquals(checker, result);
@@ -41,13 +56,13 @@ class CheckerTest {
 
 	@Test
 	void whenSuccessNull_thenThrowIllegalArgumentException() {
-		Checker<String, Integer> checker = Checker.of(Integer::parseInt);
+		Checker<String, Integer> checker = Checker.of(String.class, Integer.class, Integer::parseInt);
 		assertThrows(IllegalArgumentException.class, () -> checker.success(null));
 	}
 
 	@Test
 	void whenFail_thenReturnCheckerInstance() {
-		Checker<String, Integer> checker = Checker.of(Integer::parseInt);
+		Checker<String, Integer> checker = Checker.of(String.class, Integer.class, Integer::parseInt);
 		Checker<String, Integer> result = checker.fail(error -> {});
 		assertNotNull(result);
 		assertEquals(checker, result);
@@ -55,13 +70,13 @@ class CheckerTest {
 
 	@Test
 	void whenFailNull_thenThrowIllegalArgumentException() {
-		Checker<String, Integer> checker = Checker.of(Integer::parseInt);
+		Checker<String, Integer> checker = Checker.of(String.class, Integer.class, Integer::parseInt);
 		assertThrows(IllegalArgumentException.class, () -> checker.fail(null));
 	}
 
 	@Test
 	void whenError_thenReturnCheckerInstance() {
-		Checker<String, Integer> checker = Checker.of(Integer::parseInt);
+		Checker<String, Integer> checker = Checker.of(String.class, Integer.class, Integer::parseInt);
 		Checker<String, Integer> result = checker.error("Invalid input");
 		assertNotNull(result);
 		assertEquals(checker, result);
@@ -69,7 +84,7 @@ class CheckerTest {
 
 	@Test
 	void whenQualifier_thenReturnCheckerInstance() {
-		Checker<String, Integer> checker = Checker.of(Integer::parseInt);
+		Checker<String, Integer> checker = Checker.of(String.class, Integer.class, Integer::parseInt);
 		Checker<String, Integer> result = checker.qualifier(value -> value > 0);
 		assertNotNull(result);
 		assertEquals(checker, result);
@@ -77,13 +92,13 @@ class CheckerTest {
 
 	@Test
 	void whenQualifierNull_thenThrowIllegalArgumentException() {
-		Checker<String, Integer> checker = Checker.of(Integer::parseInt);
+		Checker<String, Integer> checker = Checker.of(String.class, Integer.class, Integer::parseInt);
 		assertThrows(IllegalArgumentException.class, () -> checker.qualifier((Qualifier<Integer>) null));
 	}
 
 	@Test
 	void whenQualifierClass_thenReturnCheckerInstance() {
-		Checker<String, Integer> checker = Checker.of(Integer::parseInt);
+		Checker<String, Integer> checker = Checker.of(String.class, Integer.class, Integer::parseInt);
 		Checker<String, Integer> result = checker.qualifier(SampleQualifier.class);
 		assertNotNull(result);
 		assertEquals(checker, result);
@@ -91,27 +106,13 @@ class CheckerTest {
 
 	@Test
 	void whenQualifierClassNull_thenThrowIllegalArgumentException() {
-		Checker<String, Integer> checker = Checker.of(Integer::parseInt);
+		Checker<String, Integer> checker = Checker.of(String.class, Integer.class, Integer::parseInt);
 		assertThrows(IllegalArgumentException.class, () -> checker.qualifier((Class<SampleQualifier>) null));
 	}
 
 	@Test
-	void whenAnd_thenReturnNewCheckerInstance() {
-		Checker<String, Integer> checker = Checker.of(Integer::parseInt);
-		Checker<String, Integer> result = checker.and(String::length);
-		assertNotNull(result);
-		assertNotEquals(checker, result);
-	}
-
-	@Test
-	void whenAndNullAttribute_thenThrowIllegalArgumentException() {
-		Checker<String, Integer> checker = Checker.of(Integer::parseInt);
-		assertThrows(IllegalArgumentException.class, () -> checker.and(null));
-	}
-
-	@Test
 	void whenNoFailures_thenNoExceptionThrown() {
-		Checker<String, Integer> checker = Checker.of(Integer::parseInt);
+		Checker<String, Integer> checker = Checker.of(String.class, Integer.class, Integer::parseInt);
 		checker.qualifier(value -> value > 0);
 
 		assertDoesNotThrow(() -> checker.check("42"));
@@ -119,7 +120,7 @@ class CheckerTest {
 
 	@Test
 	void whenOneQualifierFails_thenThrowIllegalArgumentException() {
-		Checker<String, Integer> checker = Checker.of(Integer::parseInt);
+		Checker<String, Integer> checker = Checker.of(String.class, Integer.class, Integer::parseInt);
 		checker.qualifier(value -> value > 0)
 		       .error("Invalid input");
 
@@ -129,10 +130,10 @@ class CheckerTest {
 
 	@Test
 	void whenMultipleQualifiersFail_thenThrowIllegalArgumentExceptionWithMultipleErrors() {
-		Checker<String, Integer> checker = Checker.of(Integer::parseInt);
+		Checker<String, Integer> checker = Checker.of(String.class, Integer.class, Integer::parseInt);
 		checker.qualifier(value -> value > 0)
 		       .error("Invalid input")
-		       .and(String::length)
+		       .and(Integer.class, String::length)
 		       .qualifier(value -> value % 2 == 0)
 		       .error("Value must be even");
 
@@ -147,7 +148,7 @@ class CheckerTest {
 			final Logger logger = mock(Logger.class);
 			integerMock.when(() -> LogManager.getLogger(any(Class.class))).thenReturn(logger);
 
-			Checker<String, Integer> checker = Checker.of(Integer::parseInt);
+			Checker<String, Integer> checker = Checker.of(String.class, Integer.class, Integer::parseInt);
 			checker.qualifier(value -> {throw new RuntimeException("Exception expected");});
 
 			assertDoesNotThrow(() -> checker.check("42"));
@@ -159,7 +160,7 @@ class CheckerTest {
 	@Test
 	void whenSuccessAction_thenActionExecuted() {
 		List<Integer> successValues = new ArrayList<>();
-		Checker<String, Integer> checker = Checker.of(Integer::parseInt);
+		Checker<String, Integer> checker = Checker.of(String.class, Integer.class, Integer::parseInt);
 		checker.qualifier(value -> value > 0)
 		       .success(successValues::add);
 
@@ -172,7 +173,7 @@ class CheckerTest {
 	@Test
 	void whenFailAction_thenActionExecuted() {
 		List<Integer> failValues = new ArrayList<>();
-		Checker<String, Integer> checker = Checker.of(Integer::parseInt);
+		Checker<String, Integer> checker = Checker.of(String.class, Integer.class, Integer::parseInt);
 		checker.qualifier(value -> value > 0)
 		       .fail(failValues::add);
 
@@ -184,7 +185,7 @@ class CheckerTest {
 
 	@Test
 	void whenNotNull_thenReturnCheckerInstance() {
-		Checker<String, String> checker = Checker.of(Function.identity());
+		Checker<String, String> checker = Checker.of(String.class, String.class, Function.identity());
 		Checker<String, String> result = checker.notNull().error("Value cannot be null");
 		assertNotNull(result);
 		assertEquals(checker, result);
@@ -194,45 +195,77 @@ class CheckerTest {
 	}
 
 	@Test
-	void whenNotEmptyForString_thenReturnCheckerInstance() {
-		Checker<String, String> checker = Checker.of(Function.identity());
-		Checker<String, String> result = checker.notEmpty().error("String cannot be empty");
+	void whenNotEmpty_thenReturnCheckerInstance() {
+		Checker<Object, Object> checker = spy(Checker.of(Object.class, Object.class, Function.identity()));
+		Checker<Object, Object> result = checker.notEmpty().error("Value cannot be empty");
 		assertNotNull(result);
 		assertEquals(checker, result);
 
-		assertDoesNotThrow(() -> result.check("Hello"));
-		assertThrows(IllegalArgumentException.class, () -> result.check(""));
+		verify(checker).notNull();
 	}
 
 	@Test
-	void whenNotEmptyForIterable_thenReturnCheckerInstance() {
-		Checker<List<Integer>, List<Integer>> checker = Checker.of(Function.identity());
-		Checker<List<Integer>, List<Integer>> result = checker.notEmpty().error("List cannot be empty");
+	void whenNotBlank_thenReturnCheckerInstance() {
+		Checker<Object, Object> checker = spy(Checker.of(Object.class, Object.class, Function.identity()));
+		Checker<Object, Object> result = checker.notBlank().error("Value cannot be empty");
 		assertNotNull(result);
 		assertEquals(checker, result);
 
-		List<Integer> nonEmptyList = List.of(1, 2, 3);
-		List<Integer> emptyList = new ArrayList<>();
-
-		assertDoesNotThrow(() -> result.check(nonEmptyList));
-		assertThrows(IllegalArgumentException.class, () -> result.check(emptyList));
+		verify(checker).notNull();
 	}
 
 	@Test
-	void whenNotEmptyForOtherType_thenReturnCheckerInstance() {
-		Checker<Integer, Integer> checker = Checker.of(Function.identity());
-		Checker<Integer, Integer> result = checker.notEmpty().error("Value cannot be empty");
+	void whenMin_thenReturnCheckerInstance() {
+		Checker<Object, Object> checker = spy(Checker.of(Object.class, Object.class, Function.identity()));
+		Checker<Object, Object> result = checker.min(3);
 		assertNotNull(result);
 		assertEquals(checker, result);
 
-		assertDoesNotThrow(() -> result.check(42));
-		assertThrows(IllegalArgumentException.class, () -> result.check(null));
+		verify(checker).notNull();
 	}
-}
 
-class SampleQualifier implements Qualifier<Integer> {
-	@Override
-	public boolean isSatisfiedBy(Integer value) {
-		return value > 0;
+	@Test
+	void whenMinNull_thenThrowIllegalArgumentException() {
+		Checker<Object, Object> checker = spy(Checker.of(Object.class, Object.class, Function.identity()));
+		assertThrows(IllegalArgumentException.class, () -> checker.min(null));
+	}
+
+	@Test
+	void whenMax_thenReturnCheckerInstance() {
+		Checker<Object, Object> checker = spy(Checker.of(Object.class, Object.class, Function.identity()));
+		Checker<Object, Object> result = checker.max(3);
+		assertNotNull(result);
+		assertEquals(checker, result);
+
+		verify(checker).notNull();
+	}
+
+	@Test
+	void whenMaxNull_thenThrowIllegalArgumentException() {
+		Checker<Object, Object> checker = spy(Checker.of(Object.class, Object.class, Function.identity()));
+		assertThrows(IllegalArgumentException.class, () -> checker.max(null));
+	}
+
+	@Test
+	void whenMatch_thenReturnCheckerInstance() {
+		Checker<Object, Object> checker = spy(Checker.of(Object.class, Object.class, Function.identity()));
+		Checker<Object, Object> result = checker.match(".*");
+		assertNotNull(result);
+		assertEquals(checker, result);
+
+		verify(checker).notNull();
+	}
+
+	@Test
+	void whenMatchNull_thenThrowIllegalArgumentException() {
+		Checker<Object, Object> checker = spy(Checker.of(Object.class, Object.class, Function.identity()));
+		assertThrows(IllegalArgumentException.class, () -> checker.match(null));
+	}
+
+	public static class SampleQualifier implements Qualifier<Integer> {
+		@Override
+		public boolean isSatisfiedBy(Integer value) {
+			return value > 0;
+		}
 	}
 }
