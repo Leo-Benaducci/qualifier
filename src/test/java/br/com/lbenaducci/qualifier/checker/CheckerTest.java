@@ -10,6 +10,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.mockito.MockedStatic;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 
@@ -33,6 +34,17 @@ class CheckerTest {
 	}
 
 	@Test
+	void whenOfCollection_thenReturnCheckerInstance() {
+		Checker<String, Collection<Integer>> checker = Checker.ofCollection(String.class, Integer.class, s -> new ArrayList<>());
+		assertNotNull(checker);
+	}
+
+	@Test
+	void whenOfCollectionNull_thenThrowIllegalArgumentException() {
+		assertThrows(IllegalArgumentException.class, () -> Checker.ofCollection(Object.class, Object.class, null));
+	}
+
+	@Test
 	void whenAnd_thenReturnNewCheckerInstance() {
 		Checker<String, Integer> checker = Checker.of(String.class, Integer.class, Integer::parseInt);
 		Checker<String, Integer> result = checker.and(Integer.class, String::length);
@@ -44,6 +56,14 @@ class CheckerTest {
 	void whenAndNullAttribute_thenThrowIllegalArgumentException() {
 		Checker<String, Integer> checker = Checker.of(String.class, Integer.class, Integer::parseInt);
 		assertThrows(IllegalArgumentException.class, () -> checker.and(Integer.class, null));
+	}
+
+	@Test
+	void whenAndCollection_thenReturnNewCheckerInstance() {
+		Checker<String, Collection<Integer>> checker = Checker.ofCollection(String.class, Integer.class, s -> new ArrayList<>());
+		Checker<String, Collection<Integer>> result = checker.andCollection(Integer.class, s -> new ArrayList<>());
+		assertNotNull(result);
+		assertNotEquals(checker, result);
 	}
 
 	@Test

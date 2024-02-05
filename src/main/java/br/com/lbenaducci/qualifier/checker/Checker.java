@@ -50,7 +50,7 @@ public sealed class Checker<I, T> permits CollectionChecker, NumberChecker, Stri
 		return CheckerFactory.create(inputType, attributeType, checkerList, getAttribute);
 	}
 
-	public <A> Checker<I, Collection<A>> and(Class<I> inputType, Class<A> genericType, Function<I, Collection<A>> getAttribute) {
+	public <A> Checker<I, Collection<A>> andCollection(Class<A> genericType, Function<I, Collection<A>> getAttribute) {
 		if(getAttribute == null) {
 			throw new IllegalArgumentException("getAttribute cannot be null");
 		}
