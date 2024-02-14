@@ -101,8 +101,12 @@ public final class Checker<T> {
 		for(Checker<?> checker: checkerList) {
 			if(!checker.isSatisfied()) {
 				result = false;
-				if(checker.errorMessage != null) {
-					errors.add(checker.errorMessage);
+				String message = checker.errorMessage;
+				if(message != null) {
+					if(message.contains("{}")) {
+						message = message.replace("{}", String.valueOf(checker.value));
+					}
+					errors.add(message);
 				}
 			}
 		}

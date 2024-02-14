@@ -156,10 +156,10 @@ class CheckerTest {
 		                                  .error("Invalid input")
 		                                  .and(3)
 		                                  .qualifier(value -> value % 2 == 0)
-		                                  .error("Value must be even");
+		                                  .error("Value '{}' must be even");
 
 		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, checker::check);
-		assertEquals("Invalid input; Value must be even", exception.getMessage());
+		assertEquals("Invalid input; Value '3' must be even", exception.getMessage());
 	}
 
 	@Test
@@ -266,7 +266,6 @@ class CheckerTest {
 		Checker<String> result3 = checker3.error("Value cannot be blank").notBlank();
 		exception = assertThrows(IllegalArgumentException.class, result3::check);
 		assertEquals("Value cannot be blank", exception.getMessage());
-
 	}
 
 	@Test
