@@ -3,7 +3,7 @@ plugins {
 }
 
 group = 'br.com.lbenaducci'
-version = '1.1.1'
+version = '1.2.0'
 
 java {
     toolchain {
@@ -23,7 +23,6 @@ ext {
 dependencies {
     implementation "org.apache.logging.log4j:log4j-core:$log4jVersion"
     implementation "org.apache.logging.log4j:log4j-api:$log4jVersion"
-    implementation 'net.jodah:typetools:0.4.1'
     testImplementation platform("org.junit:junit-bom:$junitVersion")
     testImplementation "org.junit.jupiter:junit-jupiter"
     testImplementation 'org.mockito:mockito-junit-jupiter:5.10.0'
